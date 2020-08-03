@@ -1,8 +1,8 @@
-import React from "react";
-import firebase from "firebase/app";
-import "firebase/database";
-import "firebase/auth";
-import { config } from "./config";
+import React from 'react';
+import firebase from 'firebase/app';
+import 'firebase/database';
+import 'firebase/auth';
+import { config } from './config';
 
 const firebaseContext = React.createContext();
 
@@ -12,12 +12,12 @@ function useProvideFirebase() {
 
   React.useEffect(() => {
     if (!firebase.apps.length) {
-      console.log("I am initializing new firebase app");
+      // console.log('I am initializing new firebase app');
       firebase.initializeApp(config);
     }
 
     const unsubscribeFunction = firebase.auth().onAuthStateChanged((user) => {
-      console.log("got new user", user);
+      // console.log('got new user', user);
       setUser(user);
     });
 
@@ -31,6 +31,20 @@ function useProvideFirebase() {
     await firebase.auth().createUserWithEmailAndPassword(email, password);
   };
 
+  const updatePassword = async (user, password, messageSetter) => {
+    return await user
+      .updatePassword(password)
+      .then(() => {
+        messageSetter('Successful!');
+        return true;
+      })
+      .catch((err) => {
+        console.error(err);
+        messageSetter(err.message);
+        return false;
+      });
+  };
+
   const login = async (email, password) => {
     await firebase.auth().signInWithEmailAndPassword(email, password);
   };
@@ -39,11 +53,22 @@ function useProvideFirebase() {
     await firebase.auth().signOut();
   };
 
+  const sendResetPasswordLink = async (email) => {
+    return await firebase
+      .auth()
+      .sendPasswordResetEmail(email)
+      .then(() => {
+        return true;
+      });
+  };
+
   return {
     user,
     register,
     login,
     signout,
+    updatePassword,
+    sendResetPasswordLink,
   };
 }
 
